@@ -158,9 +158,7 @@ class _TeamsScreenState extends State<TeamsScreen> {
 
   void _handlePlayerTap(
       Player player, bool isSubstituted, bool isOriginalTitular) {
-    // Se for um reserva que está substituindo alguém ou um titular que foi substituído
     if (isOriginalTitular || isSubstituted) {
-      // Procura o ID do titular original
       final titularId = isOriginalTitular
           ? _service.playerSubstitutions.entries
               .firstWhere((entry) => entry.value == player.id)
@@ -171,7 +169,6 @@ class _TeamsScreenState extends State<TeamsScreen> {
       return;
     }
 
-    // Se for um titular que ainda não foi substituído, mostra diálogo de substituição
     if (player.type == PlayerType.titular) {
       _showSubstitutionDialog(player);
       return;
@@ -198,7 +195,6 @@ class _TeamsScreenState extends State<TeamsScreen> {
       ),
       body: Column(
         children: [
-          // Info panel
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(16),
@@ -254,8 +250,6 @@ class _TeamsScreenState extends State<TeamsScreen> {
               ],
             ),
           ),
-
-          // Teams list
           Expanded(
             child: teams.isEmpty
                 ? _buildEmptyState()
@@ -266,8 +260,6 @@ class _TeamsScreenState extends State<TeamsScreen> {
                     },
                   ),
           ),
-
-          // Reservas section
           if (reservas.isNotEmpty)
             Container(
               width: double.infinity,

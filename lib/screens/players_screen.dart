@@ -46,7 +46,7 @@ class _PlayersScreenState extends State<PlayersScreen> {
       if (_service.allPlayers.length >= 18) {
         _service.addPlayer(name, PlayerType.reserva);
       } else {
-        _service.addPlayer(name, _selectedType);
+        _service.addPlayer(name, PlayerType.titular);
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(

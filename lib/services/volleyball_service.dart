@@ -13,10 +13,8 @@ class VolleyballService extends ChangeNotifier {
   final List<Match> _matches = [];
   final List<Player> _reservas = [];
 
-  final Map<String, String> _playerSubstitutions =
-      {}; // playerId -> substituteId
+  final Map<String, String> _playerSubstitutions = {};
 
-  // Getters
   List<Player> get allPlayers => List.unmodifiable(_allPlayers);
   List<Team> get teams => List.unmodifiable(_teams);
   List<Match> get matches => List.unmodifiable(_matches);
@@ -27,7 +25,6 @@ class VolleyballService extends ChangeNotifier {
   List<Player> get titulares =>
       _allPlayers.where((p) => p.type == PlayerType.titular).toList();
 
-  // Player management
   void addPlayer(String name, PlayerType type) {
     final player = Player(
       id: name,
@@ -55,7 +52,6 @@ class VolleyballService extends ChangeNotifier {
     _reservas.removeWhere((p) => p.id == playerId);
     _playerSubstitutions.remove(playerId);
 
-    // Remove from teams
     for (int i = 0; i < _teams.length; i++) {
       if (_teams[i].players.any((p) => p.id == playerId)) {
         _teams[i] = _teams[i].removePlayer(playerId);
@@ -66,9 +62,7 @@ class VolleyballService extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Team management
   void _distributePlayerToTeams(Player player) {
-    // First, try to add to existing teams with available slots
     for (int i = 0; i < _teams.length && i < 2; i++) {
       if (_teams[i].canAddPlayer()) {
         _teams[i] = _teams[i].addPlayer(player);
@@ -76,7 +70,6 @@ class VolleyballService extends ChangeNotifier {
       }
     }
 
-    // If first two teams are full, create third team if it doesn't exist
     if (_teams.length < 3) {
       final newTeam = Team(
         id: 'time-${_teams.length + 1}',
@@ -87,13 +80,11 @@ class VolleyballService extends ChangeNotifier {
       return;
     }
 
-    // If third team exists and has space
     if (_teams.length == 3 && _teams[2].canAddPlayer()) {
       _teams[2] = _teams[2].addPlayer(player);
       return;
     }
 
-    // If all teams are full, add to reserves
     if (!_reservas.contains(player)) {
       _reservas.add(player);
     }
@@ -104,10 +95,8 @@ class VolleyballService extends ChangeNotifier {
     _teams.clear();
     _playerSubstitutions.clear();
 
-    // Shuffle players
     allTitulares.shuffle();
 
-    // Distribute players to teams
     for (final player in allTitulares) {
       _distributePlayerToTeams(player);
     }
@@ -118,32 +107,25 @@ class VolleyballService extends ChangeNotifier {
   void _removeEmptyTeams() {
     _teams.removeWhere((team) => team.isEmpty);
 
-    // Rename teams sequentially
     for (int i = 0; i < _teams.length; i++) {
       _teams[i] = _teams[i].copyWith(name: 'Time ${i + 1}');
     }
   }
 
-  // Substitution management
   void substitutePlayer(String titularId, String reservaId) {
     final titular = _allPlayers.firstWhere((p) => p.id == titularId);
     final reserva = _allPlayers.firstWhere((p) => p.id == reservaId);
 
-    // Find which team the titular belongs to
     for (int i = 0; i < _teams.length; i++) {
       if (_teams[i].players.any((p) => p.id == titularId)) {
-        // Replace in team
         _teams[i] = _teams[i].replacePlayer(titularId, reserva);
 
-        // Update substitution tracking
         _playerSubstitutions[titularId] = reservaId;
 
-        // Move titular to reserves
         if (!_reservas.any((p) => p.id == titularId)) {
           _reservas.add(titular);
         }
 
-        // Remove reserva from reserves list
         _reservas.removeWhere((p) => p.id == reservaId);
 
         break;
@@ -160,21 +142,16 @@ class VolleyballService extends ChangeNotifier {
     final titular = _allPlayers.firstWhere((p) => p.id == originalTitularId);
     final reserva = _allPlayers.firstWhere((p) => p.id == reservaId);
 
-    // Find which team the reserva is currently in
     for (int i = 0; i < _teams.length; i++) {
       if (_teams[i].players.any((p) => p.id == reservaId)) {
-        // Replace back
         _teams[i] = _teams[i].replacePlayer(reservaId, titular);
 
-        // Remove from substitution tracking
         _playerSubstitutions.remove(originalTitularId);
 
-        // Move reserva back to reserves
         if (!_reservas.any((p) => p.id == reservaId)) {
           _reservas.add(reserva);
         }
 
-        // Remove titular from reserves
         _reservas.removeWhere((p) => p.id == originalTitularId);
 
         break;
@@ -184,7 +161,6 @@ class VolleyballService extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Match management
   void createMatch(String team1Id, String team2Id) {
     final team1 = _teams.firstWhere((t) => t.id == team1Id);
     final team2 = _teams.firstWhere((t) => t.id == team2Id);
@@ -213,14 +189,12 @@ class VolleyballService extends ChangeNotifier {
 
   Team? getWaitingTeam() {
     if (_teams.length < 3) return null;
-
-    // Get the most recent match
-    if (_matches.isEmpty) return _teams[2]; // Third team waits initially
+    // Se não houver times suficientes, retorna null
+    if (_matches.isEmpty) return _teams[2];
 
     final lastMatch = _matches.last;
     if (!lastMatch.isFinished) return null;
 
-    // The team that didn't participate in the last match
     final teamsInLastMatch = [lastMatch.team1.id, lastMatch.team2.id];
     for (final team in _teams) {
       if (!teamsInLastMatch.contains(team.id)) {
@@ -235,7 +209,6 @@ class VolleyballService extends ChangeNotifier {
     if (_teams.length < 2) return;
 
     if (_matches.isEmpty) {
-      // First match: Team 1 vs Team 2
       if (_teams.length >= 2) {
         createMatch(_teams[0].id, _teams[1].id);
       }
@@ -251,19 +224,15 @@ class VolleyballService extends ChangeNotifier {
     if (waitingTeam != null && winner.id != waitingTeam.id) {
       createMatch(winner.id, waitingTeam.id);
     } else if (waitingTeam != null && winner.id == waitingTeam.id) {
-      // Se o time vencedor é o mesmo que está aguardando,
-      // procura outro time disponível para jogar
       final availableTeam = _teams.firstWhere(
         (team) => team.id != winner.id,
-        orElse: () =>
-            _teams[0], // Fallback para o primeiro time se não encontrar outro
+        orElse: () => _teams[0],
       );
 
       createMatch(winner.id, availableTeam.id);
     }
   }
 
-  // Utility methods
   bool canCreateTeams() => titulares.length >= 6;
 
   int get totalPlayersInTeams {

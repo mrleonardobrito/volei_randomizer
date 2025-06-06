@@ -50,7 +50,7 @@ class MatchesScreenEvents {
 
   static void showMinTeamsWarning(BuildContext context) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
+      const SnackBar(
         content: Text(MatchesScreenConstants.minTeamsWarning),
       ),
     );
